@@ -8,7 +8,8 @@ class DebugButton extends StatelessWidget {
     return FloatingActionButton(
       onPressed: () {
         // Debug Action
-        Provider.of<TimelineRouteNotifier>(context, listen: false).increment(1);
+        var provider = Provider.of<TimelineProvider>(context, listen: false);
+        provider.insertItem(0, "hoge");
       },
       tooltip: "Debug",
       child: Icon(Icons.check),
