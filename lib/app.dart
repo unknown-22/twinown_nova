@@ -1,44 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
-import 'ui/common/debug_button.dart';
-import 'ui/common/counter.dart';
 
 class TwinownApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+
+    // TODO 初回起動時変更
+    var timelineRoute = TimelineRoute();
+
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flutter Demo',  // FIXME
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
-    );
-  }
-}
-
-// TODO move to scene
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Twinown')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Counter(0),
-          ],
-        ),
-      ),
-      floatingActionButton: DebugButton(),
+      home: timelineRoute,
     );
   }
 }
