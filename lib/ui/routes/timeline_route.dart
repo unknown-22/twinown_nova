@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:twinown_nova/resources/api/mastodon.dart';
+import 'package:twinown_nova/resources/models/account.dart';
 import 'package:twinown_nova/ui/common/debug_button.dart';
 
 import 'package:provider/provider.dart';
@@ -6,8 +8,14 @@ import 'package:twinown_nova/ui/common/timeline_list.dart';
 
 
 class TimelineProvider with ChangeNotifier {
-  TimelineProvider() {
+  Account account;
+  MastodonApi mastodonApi;
+
+  TimelineProvider(this.account) {
     // TODO some init
+    if (account.type == "mastodon") {
+      mastodonApi = MastodonApi(account.clientId, account.clientSecret);
+    }
   }
 
   int _count = 0;
@@ -15,15 +23,23 @@ class TimelineProvider with ChangeNotifier {
 
   void countIncrement(int delta) {
     _count += delta;
-    debugPrint(_count.toString());
     notifyListeners();
   }
 
-  final List<String> _data = ['data1', 'data2', 'data3', 'data4', 'data5'];
+  final List<String> _data = [];
   List<String> get data => _data;
 
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   GlobalKey<AnimatedListState> get listKey => _listKey;
+
+  void reloadHome() async {
+    List<String> timeline = await mastodonApi.getHome(account.authToken);
+
+    for (String content in timeline.reversed.toList()) {
+      insertItem(0, content);
+      await Future.delayed(Duration(milliseconds: 300));
+    }
+  }
 
   void insertItem(int index, String item) {
     _data.insert(index, item);
@@ -51,12 +67,14 @@ class TimelineRoute extends StatefulWidget {
 class TimelineRouteState extends State<TimelineRoute> {
   @override
   Widget build(BuildContext context) {
+    var accounts = getAccountsFromFile();
+
     return Scaffold(
       appBar: AppBar(title: Text('Twinown')),
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider(
-              builder: (context) => TimelineProvider()
+              builder: (context) => TimelineProvider(accounts[0])
           )
         ],
         child: Scaffold(

@@ -6,10 +6,12 @@ class DebugButton extends StatelessWidget {
   @override
   Widget build(context) {
     return FloatingActionButton(
-      onPressed: () {
+      onPressed: () async {
         // Debug Action
         var provider = Provider.of<TimelineProvider>(context, listen: false);
-        provider.insertItem(0, "hoge");
+        // provider.insertItem(0, "hoge");
+        provider.reloadHome();
+
       },
       tooltip: "Debug",
       child: Icon(Icons.check),
