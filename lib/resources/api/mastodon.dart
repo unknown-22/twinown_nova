@@ -82,7 +82,6 @@ class MastodonApi {
         params
     );
 
-    debugPrint(headers.toString());
     http.Response resp = await http.get(uri, headers: headers);
     if (resp.statusCode != 200) {
       debugPrint("Failed to post ${resp.statusCode}");
