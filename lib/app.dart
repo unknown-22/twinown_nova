@@ -12,6 +12,7 @@ class TwinownApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',  // FIXME
       theme: ThemeData(
+        brightness: Brightness.dark,
         primarySwatch: Colors.blue,
       ),
       home: timelineRoute,
