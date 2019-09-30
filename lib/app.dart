@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twinown_nova/ui/routes/mastodon_login_route.dart';
 import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
 
@@ -8,6 +9,7 @@ class TwinownApp extends StatelessWidget {
 
     // TODO 初回起動時変更
     var timelineRoute = TimelineRoute();
+    var loginRoute = MastodonLoginRoute();
 
     return MaterialApp(
       title: 'Flutter Demo',  // FIXME
@@ -15,7 +17,7 @@ class TwinownApp extends StatelessWidget {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
       ),
-      home: timelineRoute,
+      home: loginRoute,
     );
   }
 }
