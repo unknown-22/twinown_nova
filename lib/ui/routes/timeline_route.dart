@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
-import 'package:twinown_nova/resources/models/account.dart';
+import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/ui/common/debug_button.dart';
 
 import 'package:provider/provider.dart';
@@ -8,15 +8,8 @@ import 'package:twinown_nova/ui/common/timeline_list.dart';
 
 
 class TimelineProvider with ChangeNotifier {
-  Account account;
+  TwinownAccount account;
   MastodonApi mastodonApi;
-
-  TimelineProvider(this.account) {
-    // TODO some init
-    if (account.type == "mastodon") {
-      mastodonApi = MastodonApi(account.clientId, account.clientSecret);
-    }
-  }
 
   int _count = 0;
   int get count => _count;
@@ -32,12 +25,12 @@ class TimelineProvider with ChangeNotifier {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   GlobalKey<AnimatedListState> get listKey => _listKey;
 
-  void reloadHome() async {
-    List<String> timeline = await mastodonApi.getHome(account.authToken);
+  Future<void> reloadHome() async {
+    List<String> timeline = await mastodonApi.getHome();
 
     for (String content in timeline.reversed.toList()) {
       insertItem(0, content);
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future<void>.delayed(Duration(milliseconds: 300));
     }
   }
 
@@ -48,11 +41,13 @@ class TimelineProvider with ChangeNotifier {
 
   void removeItem(String item, Function buildFunction, Animation animation) {
     var removeIndex = _data.indexOf(item);
-    _data.removeAt(removeIndex);
-    listKey.currentState.removeItem(
-      removeIndex,
-      (context, animation) => buildFunction(context, item, animation)
-    );
+    if (removeIndex != -1) {
+      _data.removeAt(removeIndex);
+      listKey.currentState.removeItem(
+          removeIndex,
+              (context, animation) => buildFunction(context, item, animation)
+      );
+    }
   }
 }
 
@@ -67,14 +62,12 @@ class TimelineRoute extends StatefulWidget {
 class TimelineRouteState extends State<TimelineRoute> {
   @override
   Widget build(BuildContext context) {
-    var accounts = getAccountsFromFile();
-
     return Scaffold(
       appBar: AppBar(title: Text('Twinown')),
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider(
-              builder: (context) => TimelineProvider(accounts[0])
+              builder: (context) => TimelineProvider()
           )
         ],
         child: Scaffold(
