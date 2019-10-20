@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path_provider/path_provider.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_client.dart';
 
@@ -10,35 +11,49 @@ enum SettingType {
   tabs
 }
 
+class SettingFileNotFoundError extends Error {}
 
-Map<String, dynamic> loadSetting(SettingType settingType) {
+Future<Map<String, dynamic>> loadSetting(SettingType settingType) async {
   Map<String, String> envVars = Platform.environment;
-  String home = '';
+  Directory settingDirectory;
   if (Platform.isWindows) {
-    home = envVars['UserProfile'];
-  } else {
+    settingDirectory = Directory('${envVars['UserProfile']}/.twinown');
+    if (!settingDirectory.existsSync()) {
+      settingDirectory.createSync();
+    }
+  } else if (Platform.isAndroid) {
+    settingDirectory = await getApplicationDocumentsDirectory();
+  }
+  else {
     throw Error();
   }
 
-  Directory settingDirectory = Directory('$home/.twinown');
-  String typeKey = settingType.toString().split('.')?.last;
+  String typeKey = settingType.toString().split('.').last;
   File twinownSettingFile = File(
       '${settingDirectory.path}/twinown_${typeKey}_setting.json'
   );
 
+  if (!twinownSettingFile.existsSync()) {
+    throw SettingFileNotFoundError();
+  }
+
   return json.decode(twinownSettingFile.readAsStringSync());
 }
 
-void writeSetting(SettingType settingType, String data) {
+Future<void> writeSetting(SettingType settingType, String data) async {
   Map<String, String> envVars = Platform.environment;
-  String home = '';
+  Directory settingDirectory;
   if (Platform.isWindows) {
-    home = envVars['UserProfile'];
+    settingDirectory = Directory('${envVars['UserProfile']}/.twinown');
+    if (!settingDirectory.existsSync()) {
+      settingDirectory.createSync();
+    }
+  } else if (Platform.isAndroid) {
+    settingDirectory = await getApplicationDocumentsDirectory();
   } else {
     throw Error();
   }
 
-  Directory settingDirectory = Directory('$home/.twinown');
   String typeKey = settingType.toString().split('.')?.last;
   File twinownSettingFile = File(
       '${settingDirectory.path}/twinown_${typeKey}_setting.json'
@@ -47,15 +62,25 @@ void writeSetting(SettingType settingType, String data) {
   twinownSettingFile.writeAsStringSync(data);
 }
 
-void addAccount(TwinownAccount account) {
-  Map<String, dynamic> accounts = loadSetting(SettingType.accounts);
+Future<void> addAccount(TwinownAccount account) async {
+  Map<String, dynamic> accounts;
+  try {
+    accounts = await loadSetting(SettingType.accounts);
+  } on SettingFileNotFoundError catch(_) {
+    accounts = <String, dynamic>{};
+  }
   accounts['${account.name}@${account.client.host}'] = account;
   var data = JsonEncoder.withIndent('  ').convert(accounts);
   writeSetting(SettingType.accounts, data);
 }
 
-void addClient(TwinownClient client) {
-  Map<String, dynamic> clients = loadSetting(SettingType.clients);
+Future<void> addClient(TwinownClient client) async {
+  Map<String, dynamic> clients;
+  try {
+    clients = await loadSetting(SettingType.clients);
+  } on SettingFileNotFoundError catch(_) {
+    clients = <String, dynamic>{};
+  }
   clients[client.host] = client;
   var data = JsonEncoder.withIndent('  ').convert(clients);
   writeSetting(SettingType.clients, data);

@@ -108,7 +108,13 @@ Future<TwinownAccount> tokenMastodon(TwinownClient client, String code) async {
 
   Map<String, dynamic> data = jsonDecode(resp.body);
 
-  Map<String, dynamic> accounts = loadSetting(SettingType.accounts);
+
+  Map<String, dynamic> accounts;
+  try {
+    accounts = await loadSetting(SettingType.accounts);
+  } on SettingFileNotFoundError catch(_) {
+    accounts = <String, dynamic>{};
+  }
 
   TwinownAccount tempAccount = TwinownAccount(
     '',

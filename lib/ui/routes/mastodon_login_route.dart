@@ -14,7 +14,7 @@ class MastodonLoginProvider with ChangeNotifier {
 
   Future<void> prepareAuthorize() async {
     try {
-      client = loadClient(hostText);
+      client = await loadClient(hostText);
     } on ClientNotFoundError catch(_) {
       client = await createMastodonClient(hostText, clientName: 'Twinwon');
       addClient(client);
@@ -28,9 +28,10 @@ class MastodonLoginProvider with ChangeNotifier {
     );
   }
 
-  Future<void> authorize() async {
+  Future<void> authorize(BuildContext context) async {
     TwinownAccount account = await tokenMastodon(client, codeText);
     addAccount(account);
+    Navigator.pushReplacementNamed(context, '/timeline_route');
   }
 
   // TODO validate
@@ -42,8 +43,8 @@ class MastodonLoginProvider with ChangeNotifier {
   // TODO validate
   void updateCodeText(String codeText) {
     // TODO fix for IME
-    // this.codeText = codeText;
-    this.codeText = '';
+    this.codeText = codeText;
+    // this.codeText = 'vpwOnjRk_8mpxxfd_ZaBdFgFxGvaFi-HCF1fAPoV9rg';
   }
 }
 
@@ -107,7 +108,7 @@ class AuthorizationCodePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.pinkAccent,
         child: Icon(Icons.check),
-        onPressed: () => provider.authorize(),
+        onPressed: () => provider.authorize(context),
       ),
     );
   }

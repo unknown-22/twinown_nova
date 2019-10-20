@@ -29,8 +29,15 @@ class TwinownClient {
 
 class ClientNotFoundError extends Error {}
 
-TwinownClient loadClient(String host) {
-  dynamic clientData = loadSetting(SettingType.clients)[host];
+Future<TwinownClient> loadClient(String host) async {
+  dynamic clientData;
+  try {
+    clientData = (await loadSetting(SettingType.clients))[host];
+  } on SettingFileNotFoundError catch(_) {
+  }
+  if (clientData == null) {
+    throw ClientNotFoundError();
+  }
 
   if (clientData == null) {
     throw ClientNotFoundError();
