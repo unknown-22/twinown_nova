@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:twinown_nova/resources/api/mastodon.dart';
+import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
 
-class TimelineList extends StatelessWidget {
+class TimelineList extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => TimelineListState();
+}
+
+class TimelineListState extends State<TimelineList> {
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<TimelineProvider>(context, listen: false);
@@ -25,5 +32,18 @@ class TimelineList extends StatelessWidget {
         onTap: () => provider.removeItem(item, _buildItem, animation),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initializeUser();
+  }
+
+  Future<void> initializeUser() async {
+    var provider = Provider.of<TimelineProvider>(context, listen: false);
+    var account = (await loadAccounts())['unknown_Ex@unkworks.net'];
+    provider.account = account;
+    provider.mastodonApi = MastodonApi(account);
   }
 }
