@@ -4,13 +4,14 @@ import 'package:http/http.dart' as http;
 import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_client.dart';
+import 'package:twinown_nova/resources/models/twinown_post.dart';
 
 class MastodonApi {
   MastodonApi(this.account);
 
   final TwinownAccount account;
 
-  Future<List<String>> getHome() async {
+  Future<List<TwinownPost>> getHome() async {
     // /api/v1/timelines/home
     Map<String, String> params = {};
     Map<String, String> headers = {'Authorization': 'Bearer ${account.authToken}'};
@@ -26,9 +27,18 @@ class MastodonApi {
       throw Error();
     }
     List<dynamic> data = jsonDecode(resp.body);
-    return List<String>.generate(
+    return List<TwinownPost>.generate(
       data.length,
-      (i) => '${data[i]['account']['display_name']} : ${data[i]['content']}'
+      (i) {
+        return TwinownPost(
+          "${account.name}@${account.client.host}_${data[i]['id']}",
+          "${data[i]['account']['acct']}",
+          "${data[i]['account']['display_name']}",
+          Uri.parse("${data[i]['account']['avatar']}"),
+          "${data[i]['content']}",
+          DateTime.parse("${data[i]['created_at']}"),
+        );
+      }
     );
   }
 

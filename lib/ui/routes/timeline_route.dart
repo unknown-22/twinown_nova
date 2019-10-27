@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
+import 'package:twinown_nova/resources/models/twinown_post.dart';
 import 'package:twinown_nova/ui/common/debug_button.dart';
 
 import 'package:provider/provider.dart';
@@ -19,27 +20,27 @@ class TimelineProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  final List<String> _data = [];
-  List<String> get data => _data;
+  final List<TwinownPost> _data = [];
+  List<TwinownPost> get data => _data;
 
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   GlobalKey<AnimatedListState> get listKey => _listKey;
 
   Future<void> reloadHome() async {
-    List<String> timeline = await mastodonApi.getHome();
+    List<TwinownPost> timeline = await mastodonApi.getHome();
 
-    for (String content in timeline.reversed.toList()) {
-      insertItem(0, content);
+    for (TwinownPost post in timeline.reversed.toList()) {
+      insertItem(0, post);
       await Future<void>.delayed(Duration(milliseconds: 300));
     }
   }
 
-  void insertItem(int index, String item) {
+  void insertItem(int index, TwinownPost item) {
     _data.insert(index, item);
     _listKey.currentState.insertItem(index);
   }
 
-  void removeItem(String item, Function buildFunction, Animation animation) {
+  void removeItem(TwinownPost item, Function buildFunction, Animation animation) {
     var removeIndex = _data.indexOf(item);
     if (removeIndex != -1) {
       _data.removeAt(removeIndex);
@@ -63,7 +64,7 @@ class TimelineRouteState extends State<TimelineRoute> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Twinown')),
+      // appBar: AppBar(title: Text('Twinown')),
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider(

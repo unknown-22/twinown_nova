@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twinown_nova/app.dart';
-import 'package:twinown_nova/ui/routes/mastodon_login_route.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
