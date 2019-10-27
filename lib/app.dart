@@ -30,21 +30,16 @@ class TwinownAppState extends State<TwinownApp> {
   }
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _prepare();
   }
 
   Future<void> _prepare() async {
-    Future(() async {
-      try {
-        await loadSetting(SettingType.accounts);
-      } on SettingFileNotFoundError catch(_) {
-        navigatorKey.currentState.pushReplacementNamed('/mastodon_login');
-        return;
-      }
+    loadSetting(SettingType.accounts).then((dynamic _) {
       navigatorKey.currentState.pushReplacementNamed('/timeline_route');
-      return;
-    });
+    }).catchError((Object  _) {
+      navigatorKey.currentState.pushReplacementNamed('/mastodon_login');
+    }, test: (Object e) => e is SettingFileNotFoundError);
   }
 }
