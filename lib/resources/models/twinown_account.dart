@@ -28,7 +28,7 @@ class TwinownAccount {
 }
 
 Future<Map<String, TwinownAccount>> loadAccounts() async {
-  var accountData = await loadSetting(SettingType.accounts);
+  Map<String, dynamic> accountData = await loadSetting(SettingType.accounts);
 
   if (accountData.isEmpty) {
     throw Error();

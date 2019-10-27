@@ -13,10 +13,26 @@ enum SettingType {
 
 class SettingFileNotFoundError extends Error {}
 
-Future<Map<String, dynamic>> loadSetting(SettingType settingType) async {
-  Map<String, String> envVars = Platform.environment;
+
+
+dynamic loadSetting(SettingType settingType) async {
+  Directory settingDirectory = await _getSettingDirectory();
+  String typeKey = settingType.toString().split('.').last;
+  File twinownSettingFile = File(
+      '${settingDirectory.path}/twinown_${typeKey}_setting.json'
+  );
+
+  if (!twinownSettingFile.existsSync()) {
+    throw SettingFileNotFoundError();
+  }
+
+  return _getSettingData(twinownSettingFile);
+}
+
+Future<Directory> _getSettingDirectory() async {
   Directory settingDirectory;
   if (Platform.isWindows) {
+    Map<String, String> envVars = Platform.environment;
     settingDirectory = Directory('${envVars['UserProfile']}/.twinown');
     if (!settingDirectory.existsSync()) {
       settingDirectory.createSync();
@@ -27,32 +43,16 @@ Future<Map<String, dynamic>> loadSetting(SettingType settingType) async {
   else {
     throw Error();
   }
-
-  String typeKey = settingType.toString().split('.').last;
-  File twinownSettingFile = File(
-      '${settingDirectory.path}/twinown_${typeKey}_setting.json'
-  );
-
-  if (!twinownSettingFile.existsSync()) {
-    throw SettingFileNotFoundError();
-  }
-
-  return json.decode(twinownSettingFile.readAsStringSync());
+  return settingDirectory;
 }
 
+Future<dynamic> _getSettingData(File twinownSettingFile) async {
+  return json.decode(await twinownSettingFile.readAsString());
+}
+
+
 Future<void> writeSetting(SettingType settingType, String data) async {
-  Map<String, String> envVars = Platform.environment;
-  Directory settingDirectory;
-  if (Platform.isWindows) {
-    settingDirectory = Directory('${envVars['UserProfile']}/.twinown');
-    if (!settingDirectory.existsSync()) {
-      settingDirectory.createSync();
-    }
-  } else if (Platform.isAndroid) {
-    settingDirectory = await getApplicationDocumentsDirectory();
-  } else {
-    throw Error();
-  }
+  Directory settingDirectory = await _getSettingDirectory();
 
   String typeKey = settingType.toString().split('.')?.last;
   File twinownSettingFile = File(
