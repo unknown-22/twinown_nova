@@ -5,6 +5,10 @@ import 'package:twinown_nova/ui/routes/timeline_route.dart';
 import 'blocs/twinown_setting.dart';
 
 class TwinownApp extends StatefulWidget {
+  const TwinownApp({Key key, this.twinownSetting}) : super(key: key);
+
+  final TwinownSetting twinownSetting;
+
   @override
   State<StatefulWidget> createState() => TwinownAppState();
 }
@@ -23,8 +27,8 @@ class TwinownAppState extends State<TwinownApp> {
       ),
       home: Placeholder(),
       routes: <String, WidgetBuilder>{
-        '/mastodon_login': (BuildContext context) => MastodonLoginRoute(),
-        '/timeline_route': (BuildContext context) => TimelineRoute(),
+        '/mastodon_login': (BuildContext context) => MastodonLoginRoute(twinownSetting: widget.twinownSetting),
+        '/timeline_route': (BuildContext context) => TimelineRoute(twinownSetting: widget.twinownSetting),
       },
     );
   }
@@ -36,7 +40,7 @@ class TwinownAppState extends State<TwinownApp> {
   }
 
   Future<void> _prepare() async {
-    loadSetting(SettingType.accounts).then((dynamic _) {
+    widget.twinownSetting.loadSetting(SettingType.accounts).then((dynamic _) {
       navigatorKey.currentState.pushReplacementNamed('/timeline_route');
     }).catchError((Object  _) {
       navigatorKey.currentState.pushReplacementNamed('/mastodon_login');

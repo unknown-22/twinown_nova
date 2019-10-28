@@ -100,7 +100,7 @@ void authorizeMastodon(TwinownClient client) {
   );
 }
 
-Future<TwinownAccount> tokenMastodon(TwinownClient client, String code) async {
+Future<TwinownAccount> tokenMastodon(TwinownClient client, String code, TwinownSetting twinownSetting) async {
   Map<String, String> headers = {'content-type': 'application/json'};
   String body = json.encode({
     'client_id': client.clientId,
@@ -121,7 +121,7 @@ Future<TwinownAccount> tokenMastodon(TwinownClient client, String code) async {
 
   Map<String, dynamic> accounts;
   try {
-    accounts = await loadSetting(SettingType.accounts);
+    accounts = await twinownSetting.loadSetting(SettingType.accounts);
   } on SettingFileNotFoundError catch(_) {
     accounts = <String, dynamic>{};
   }

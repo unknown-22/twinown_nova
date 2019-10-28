@@ -97,7 +97,7 @@ class TimelineListState extends State<TimelineList> {
 
   Future<void> initializeUser() async {
     var provider = Provider.of<TimelineProvider>(context, listen: false);
-    loadAccounts()
+    loadAccounts(provider.twinownSetting)
         .then((Map<String, TwinownAccount> accounts) {
           provider.account = accounts['unknown_Ex@unkworks.net'];
           provider.mastodonApi = MastodonApi(provider.account);

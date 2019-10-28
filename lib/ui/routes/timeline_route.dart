@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_post.dart';
@@ -9,10 +10,15 @@ import 'package:twinown_nova/ui/common/timeline_list.dart';
 
 
 class TimelineProvider with ChangeNotifier {
+  TimelineProvider(this.twinownSetting);
+
+  final TwinownSetting twinownSetting;
+
   TwinownAccount account;
   MastodonApi mastodonApi;
 
   int _count = 0;
+
   int get count => _count;
 
   void countIncrement(int delta) {
@@ -54,7 +60,9 @@ class TimelineProvider with ChangeNotifier {
 
 
 class TimelineRoute extends StatefulWidget {
-  TimelineRoute({Key key}) : super(key: key);
+  TimelineRoute({Key key, this.twinownSetting}) : super(key: key);
+
+  final TwinownSetting twinownSetting;
 
   @override
   TimelineRouteState createState() => TimelineRouteState();
@@ -68,7 +76,7 @@ class TimelineRouteState extends State<TimelineRoute> {
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider(
-              builder: (context) => TimelineProvider()
+              builder: (context) => TimelineProvider(widget.twinownSetting)
           )
         ],
         child: Scaffold(

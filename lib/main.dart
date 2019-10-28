@@ -3,8 +3,9 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 
 import 'app.dart';
+import 'blocs/twinown_setting.dart';
 
 void main() {
   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
-  runApp(TwinownApp());
+  runApp(TwinownApp(twinownSetting: TwinownSetting()));
 }

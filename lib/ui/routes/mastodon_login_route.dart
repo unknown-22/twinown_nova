@@ -7,6 +7,10 @@ import 'package:twinown_nova/resources/models/twinown_client.dart';
 
 
 class MastodonLoginProvider with ChangeNotifier {
+  MastodonLoginProvider(this.twinownSetting);
+
+  final TwinownSetting twinownSetting;
+
   String hostText = '';
   String codeText = '';
   TwinownClient client;
@@ -14,10 +18,10 @@ class MastodonLoginProvider with ChangeNotifier {
 
   Future<void> prepareAuthorize() async {
     try {
-      client = await loadClient(hostText);
+      client = await loadClient(hostText, twinownSetting);
     } on ClientNotFoundError catch(_) {
       client = await createMastodonClient(hostText, clientName: 'Twinwon');
-      addClient(client);
+      twinownSetting.addClient(client);
     }
 
     authorizeMastodon(client);
@@ -29,8 +33,8 @@ class MastodonLoginProvider with ChangeNotifier {
   }
 
   Future<void> authorize(BuildContext context) async {
-    TwinownAccount account = await tokenMastodon(client, codeText);
-    addAccount(account);
+    TwinownAccount account = await tokenMastodon(client, codeText, twinownSetting);
+    twinownSetting.addAccount(account);
     Navigator.pushReplacementNamed(context, '/timeline_route');
   }
 
@@ -135,15 +139,24 @@ class MastodonLoginPageView extends StatelessWidget {
 }
 
 
+class MastodonLoginRoute extends StatefulWidget {
+  const MastodonLoginRoute({Key key, this.twinownSetting}) : super(key: key);
 
-class MastodonLoginRoute extends StatelessWidget {
+  final TwinownSetting twinownSetting;
+
+  @override
+  State<StatefulWidget> createState() => MastodonLoginRouteState();
+}
+
+
+class MastodonLoginRouteState extends State<MastodonLoginRoute> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider(
-              builder: (BuildContext context) => MastodonLoginProvider()
+              builder: (BuildContext context) => MastodonLoginProvider(widget.twinownSetting)
           )
         ],
         child: MastodonLoginPageView(),

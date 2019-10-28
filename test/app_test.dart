@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twinown_nova/app.dart';
+import 'package:twinown_nova/blocs/twinown_setting.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(TwinownApp(), const Duration(seconds: 2));
+    await tester.pumpWidget(TwinownApp(twinownSetting: TwinownSetting()), const Duration(seconds: 2));
 
     // await tester.pumpAndSettle(TwinownApp());
 
