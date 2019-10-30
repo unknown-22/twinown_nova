@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
@@ -8,11 +9,11 @@ import 'package:twinown_nova/ui/common/debug_button.dart';
 import 'package:provider/provider.dart';
 import 'package:twinown_nova/ui/common/timeline_list.dart';
 
-
 class TimelineProvider with ChangeNotifier {
-  TimelineProvider(this.twinownSetting);
+  TimelineProvider(this.twinownSetting, this.httpClient);
 
   final TwinownSetting twinownSetting;
+  final Client httpClient;
 
   TwinownAccount account;
   MastodonApi mastodonApi;
@@ -27,9 +28,11 @@ class TimelineProvider with ChangeNotifier {
   }
 
   final List<TwinownPost> _data = [];
+
   List<TwinownPost> get data => _data;
 
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
+
   GlobalKey<AnimatedListState> get listKey => _listKey;
 
   Future<void> reloadHome() async {
@@ -46,23 +49,23 @@ class TimelineProvider with ChangeNotifier {
     _listKey.currentState.insertItem(index);
   }
 
-  void removeItem(TwinownPost item, Function buildFunction, Animation animation) {
+  void removeItem(
+      TwinownPost item, Function buildFunction, Animation animation) {
     var removeIndex = _data.indexOf(item);
     if (removeIndex != -1) {
       _data.removeAt(removeIndex);
-      listKey.currentState.removeItem(
-          removeIndex,
-              (context, animation) => buildFunction(context, item, animation)
-      );
+      listKey.currentState.removeItem(removeIndex,
+          (context, animation) => buildFunction(context, item, animation));
     }
   }
 }
 
-
 class TimelineRoute extends StatefulWidget {
-  TimelineRoute({Key key, this.twinownSetting}) : super(key: key);
+  TimelineRoute({Key key, this.twinownSetting, this.httpClient})
+      : super(key: key);
 
   final TwinownSetting twinownSetting;
+  final Client httpClient;
 
   @override
   TimelineRouteState createState() => TimelineRouteState();
@@ -72,18 +75,16 @@ class TimelineRouteState extends State<TimelineRoute> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text('Twinown')),
-      body: MultiProvider(
-        providers: [
+        // appBar: AppBar(title: Text('Twinown')),
+        body: MultiProvider(
+            providers: [
           ChangeNotifierProvider(
-              builder: (context) => TimelineProvider(widget.twinownSetting)
-          )
+              builder: (context) =>
+                  TimelineProvider(widget.twinownSetting, widget.httpClient))
         ],
-        child: Scaffold(
-          body: TimelineList(),
-          floatingActionButton: DebugButton(),
-        )
-      )
-    );
+            child: Scaffold(
+              body: TimelineList(),
+              floatingActionButton: DebugButton(),
+            )));
   }
 }

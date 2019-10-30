@@ -5,7 +5,6 @@ import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_post.dart';
 import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
-
 class TimelineList extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => TimelineListState();
@@ -24,7 +23,8 @@ class TimelineListState extends State<TimelineList> {
     );
   }
 
-  Widget _buildItem(BuildContext context, TwinownPost item, Animation animation) {
+  Widget _buildItem(
+      BuildContext context, TwinownPost item, Animation animation) {
     var provider = Provider.of<TimelineProvider>(context, listen: false);
     return InkWell(
       onTap: () {
@@ -47,7 +47,7 @@ class TimelineListState extends State<TimelineList> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4.0),
                         child: Image.network(
-                            item.iconUri.toString(),
+                          item.iconUri.toString(),
                         ),
                       ),
                     ),
@@ -63,7 +63,7 @@ class TimelineListState extends State<TimelineList> {
                             children: <Widget>[
                               Expanded(
                                 child: Text(
-                                    '${item.displayName} : ${item.accountName}',
+                                  '${item.displayName} : ${item.accountName}',
                                   maxLines: 1,
                                 ),
                               ),
@@ -82,7 +82,9 @@ class TimelineListState extends State<TimelineList> {
                 ],
               ),
             ),
-            Divider(height: 1.0,),
+            Divider(
+              height: 1.0,
+            ),
           ],
         ),
       ),
@@ -99,8 +101,8 @@ class TimelineListState extends State<TimelineList> {
     var provider = Provider.of<TimelineProvider>(context, listen: false);
     loadAccounts(provider.twinownSetting)
         .then((Map<String, TwinownAccount> accounts) {
-          provider.account = accounts['unknown_Ex@unkworks.net'];
-          provider.mastodonApi = MastodonApi(provider.account);
+      provider.account = accounts['unknown_Ex@unkworks.net'];
+      provider.mastodonApi = MastodonApi(provider.account, provider.httpClient);
     });
   }
 }
