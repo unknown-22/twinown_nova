@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart';
+import 'package:http/http.dart' show Client, Response;
 import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_client.dart';
@@ -53,7 +53,7 @@ class MastodonApi {
     return jsonDecode(resp.body);
   }
 
-  static Future<TwinownClient> createMastodonClient(String host,
+  static Future<TwinownClient> createMastodonClient(String host, Client httpClient,
       {String clientName = 'Twinown'}) async {
     var uri = Uri.https(host, '/api/v1/apps');
     Map<String, String> headers = {'content-type': 'application/json'};
@@ -63,7 +63,7 @@ class MastodonApi {
       'scopes': 'write read follow',
     });
 
-    Response resp = await post(uri, headers: headers, body: body);
+    Response resp = await httpClient.post(uri, headers: headers, body: body);
     if (resp.statusCode != 200) {
       throw Error();
     }
@@ -98,7 +98,7 @@ class MastodonApi {
     });
 
     var uri = Uri.https(client.host, '/oauth/token');
-    Response resp = await post(uri.toString(), headers: headers, body: body);
+    Response resp = await httpClient.post(uri.toString(), headers: headers, body: body);
     if (resp.statusCode != 200) {
       throw Error();
     }

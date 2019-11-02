@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' show Client;
 import 'package:twinown_nova/ui/routes/mastodon_login_route.dart';
 import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
@@ -28,7 +28,9 @@ class TwinownAppState extends State<TwinownApp> {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
       ),
-      home: Placeholder(),
+      home: MastodonLoginRoute(
+          twinownSetting: widget.twinownSetting,
+          httpClient: widget.httpClient),
       routes: <String, WidgetBuilder>{
         '/mastodon_login': (BuildContext context) => MastodonLoginRoute(
             twinownSetting: widget.twinownSetting,

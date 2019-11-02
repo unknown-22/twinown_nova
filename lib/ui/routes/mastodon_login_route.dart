@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' show Client;
 import 'package:provider/provider.dart';
 import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
@@ -21,7 +21,7 @@ class MastodonLoginProvider with ChangeNotifier {
     try {
       client = await loadClient(hostText, twinownSetting);
     } on ClientNotFoundError catch (_) {
-      client = await MastodonApi.createMastodonClient(hostText,
+      client = await MastodonApi.createMastodonClient(hostText, httpClient,
           clientName: 'Twinwon');
       twinownSetting.addClient(client);
     }
