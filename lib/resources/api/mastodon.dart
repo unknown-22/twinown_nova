@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' show Client, Response;
@@ -12,9 +13,12 @@ class MastodonApi {
   final TwinownAccount account;
   final Client httpClient;
 
-  Future<List<TwinownPost>> getHome() async {
+  Future<List<TwinownPost>> getHome({String sinceId = ''}) async {
     // /api/v1/timelines/home
     Map<String, String> params = {};
+    if (sinceId != '') {
+      params['since_id'] = sinceId;
+    }
     Map<String, String> headers = {
       'Authorization': 'Bearer ${account.authToken}'
     };
@@ -38,6 +42,19 @@ class MastodonApi {
     });
   }
 
+  Stream<TwinownPost> getHomeStream({int apiDurationSeconds = 10}) {
+    String recentId = '';
+    var steamController = StreamController<TwinownPost>();
+    Timer.periodic(Duration(seconds: apiDurationSeconds), (_) async {
+      List<TwinownPost> timeline = await getHome(sinceId: recentId);
+      if (timeline.isNotEmpty) {
+        recentId = timeline.first.id.split('_').last;
+        timeline.reversed.toList().forEach(steamController.sink.add);
+      }
+    });
+    return steamController.stream;
+  }
+
   Future<Map<String, dynamic>> me(String authToken, String host) async {
     // /api/v1/accounts/verify_credentials
     Map<String, String> params = {};
@@ -53,7 +70,8 @@ class MastodonApi {
     return jsonDecode(resp.body);
   }
 
-  static Future<TwinownClient> createMastodonClient(String host, Client httpClient,
+  static Future<TwinownClient> createMastodonClient(
+      String host, Client httpClient,
       {String clientName = 'Twinown'}) async {
     var uri = Uri.https(host, '/api/v1/apps');
     Map<String, String> headers = {'content-type': 'application/json'};
@@ -86,8 +104,8 @@ class MastodonApi {
         runInShell: true);
   }
 
-  static Future<TwinownAccount> tokenMastodon(
-      TwinownClient client, String code, TwinownSetting twinownSetting, Client httpClient) async {
+  static Future<TwinownAccount> tokenMastodon(TwinownClient client, String code,
+      TwinownSetting twinownSetting, Client httpClient) async {
     Map<String, String> headers = {'content-type': 'application/json'};
     String body = json.encode({
       'client_id': client.clientId,
@@ -98,7 +116,8 @@ class MastodonApi {
     });
 
     var uri = Uri.https(client.host, '/oauth/token');
-    Response resp = await httpClient.post(uri.toString(), headers: headers, body: body);
+    Response resp =
+        await httpClient.post(uri.toString(), headers: headers, body: body);
     if (resp.statusCode != 200) {
       throw Error();
     }

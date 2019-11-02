@@ -35,16 +35,15 @@ class TimelineProvider with ChangeNotifier {
 
   GlobalKey<AnimatedListState> get listKey => _listKey;
 
-  Future<void> reloadHome() async {
-    List<TwinownPost> timeline = await mastodonApi.getHome();
-
-    for (TwinownPost post in timeline.reversed.toList()) {
-      insertItem(0, post);
-      await Future<void>.delayed(Duration(milliseconds: 300));
-    }
+  void startHomeStream() {
+    mastodonApi.getHomeStream()
+        .listen((post) async {
+        _insertItem(0, post);
+        await Future<void>.delayed(Duration(milliseconds: 300));
+    });
   }
 
-  void insertItem(int index, TwinownPost item) {
+  void _insertItem(int index, TwinownPost item) {
     _data.insert(index, item);
     _listKey.currentState.insertItem(index);
   }

@@ -28,9 +28,7 @@ class TwinownAppState extends State<TwinownApp> {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
       ),
-      home: MastodonLoginRoute(
-          twinownSetting: widget.twinownSetting,
-          httpClient: widget.httpClient),
+      home: Placeholder(),
       routes: <String, WidgetBuilder>{
         '/mastodon_login': (BuildContext context) => MastodonLoginRoute(
             twinownSetting: widget.twinownSetting,

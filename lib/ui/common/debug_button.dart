@@ -9,7 +9,7 @@ class DebugButton extends StatelessWidget {
       onPressed: () async {
         // Debug Action
         var provider = Provider.of<TimelineProvider>(context, listen: false);
-        provider.reloadHome();
+        provider.startHomeStream();
       },
       tooltip: 'Debug',
       child: Icon(Icons.check),
