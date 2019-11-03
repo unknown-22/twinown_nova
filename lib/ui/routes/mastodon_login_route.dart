@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' show Client;
 import 'package:provider/provider.dart';
 import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_client.dart';
 
-
 class MastodonLoginProvider with ChangeNotifier {
+  MastodonLoginProvider(this.twinownSetting, this.httpClient);
+
+  final TwinownSetting twinownSetting;
+  final Client httpClient;
+
   String hostText = '';
   String codeText = '';
   TwinownClient client;
@@ -14,23 +19,22 @@ class MastodonLoginProvider with ChangeNotifier {
 
   Future<void> prepareAuthorize() async {
     try {
-      client = await loadClient(hostText);
-    } on ClientNotFoundError catch(_) {
-      client = await createMastodonClient(hostText, clientName: 'Twinwon');
-      addClient(client);
+      client = await loadClient(hostText, twinownSetting);
+    } on ClientNotFoundError catch (_) {
+      client = await MastodonApi.createMastodonClient(hostText, httpClient,
+          clientName: 'Twinwon');
+      twinownSetting.addClient(client);
     }
 
-    authorizeMastodon(client);
-    controller.animateToPage(
-        1,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.ease
-    );
+    MastodonApi.authorizeMastodon(client);
+    controller.animateToPage(1,
+        duration: Duration(milliseconds: 300), curve: Curves.ease);
   }
 
   Future<void> authorize(BuildContext context) async {
-    TwinownAccount account = await tokenMastodon(client, codeText);
-    addAccount(account);
+    TwinownAccount account = await MastodonApi.tokenMastodon(
+        client, codeText, twinownSetting, httpClient);
+    twinownSetting.addAccount(account);
     Navigator.pushReplacementNamed(context, '/timeline_route');
   }
 
@@ -48,11 +52,11 @@ class MastodonLoginProvider with ChangeNotifier {
   }
 }
 
-
 class HostPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    MastodonLoginProvider provider = Provider.of<MastodonLoginProvider>(context, listen: false);
+    MastodonLoginProvider provider =
+        Provider.of<MastodonLoginProvider>(context, listen: false);
 
     return Scaffold(
       body: Column(
@@ -78,14 +82,13 @@ class HostPage extends StatelessWidget {
       ),
     );
   }
-
 }
-
 
 class AuthorizationCodePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    MastodonLoginProvider provider = Provider.of<MastodonLoginProvider>(context, listen: false);
+    MastodonLoginProvider provider =
+        Provider.of<MastodonLoginProvider>(context, listen: false);
 
     return Scaffold(
       body: Column(
@@ -112,14 +115,14 @@ class AuthorizationCodePage extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class MastodonLoginPageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     PageController controller = PageController();
-    MastodonLoginProvider provider = Provider.of<MastodonLoginProvider>(context, listen: false);
+    MastodonLoginProvider provider =
+        Provider.of<MastodonLoginProvider>(context, listen: false);
     provider.controller = controller;
 
     return PageView(
@@ -131,20 +134,28 @@ class MastodonLoginPageView extends StatelessWidget {
       ],
     );
   }
-
 }
 
+class MastodonLoginRoute extends StatefulWidget {
+  const MastodonLoginRoute({Key key, this.twinownSetting, this.httpClient})
+      : super(key: key);
 
+  final TwinownSetting twinownSetting;
+  final Client httpClient;
 
-class MastodonLoginRoute extends StatelessWidget {
+  @override
+  State<StatefulWidget> createState() => MastodonLoginRouteState();
+}
+
+class MastodonLoginRouteState extends State<MastodonLoginRoute> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: MultiProvider(
         providers: [
           ChangeNotifierProvider(
-              builder: (BuildContext context) => MastodonLoginProvider()
-          )
+              builder: (BuildContext context) => MastodonLoginProvider(
+                  widget.twinownSetting, widget.httpClient))
         ],
         child: MastodonLoginPageView(),
       ),

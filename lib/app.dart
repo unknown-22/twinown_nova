@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' show Client;
 import 'package:twinown_nova/ui/routes/mastodon_login_route.dart';
 import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
 import 'blocs/twinown_setting.dart';
 
 class TwinownApp extends StatefulWidget {
+  const TwinownApp({Key key, this.twinownSetting, this.httpClient})
+      : super(key: key);
+
+  final TwinownSetting twinownSetting;
+  final Client httpClient;
+
   @override
   State<StatefulWidget> createState() => TwinownAppState();
 }
@@ -23,8 +30,12 @@ class TwinownAppState extends State<TwinownApp> {
       ),
       home: Placeholder(),
       routes: <String, WidgetBuilder>{
-        '/mastodon_login': (BuildContext context) => MastodonLoginRoute(),
-        '/timeline_route': (BuildContext context) => TimelineRoute(),
+        '/mastodon_login': (BuildContext context) => MastodonLoginRoute(
+            twinownSetting: widget.twinownSetting,
+            httpClient: widget.httpClient),
+        '/timeline_route': (BuildContext context) => TimelineRoute(
+            twinownSetting: widget.twinownSetting,
+            httpClient: widget.httpClient),
       },
     );
   }
@@ -36,9 +47,17 @@ class TwinownAppState extends State<TwinownApp> {
   }
 
   Future<void> _prepare() async {
-    loadSetting(SettingType.accounts).then((dynamic _) {
-      navigatorKey.currentState.pushReplacementNamed('/timeline_route');
-    }).catchError((Object  _) {
+    widget.twinownSetting.loadClientMap().then((clientMap) {
+      return widget.twinownSetting.loadAccountMap(clientMap);
+    }).then((accountMap) {
+      return widget.twinownSetting.loadTabList(accountMap);
+    }).then((tabList) {
+      navigatorKey.currentState.pushReplacementNamed(
+        '/timeline_route',
+        arguments: TimelineRouteArguments(tabList),
+      );
+    }).catchError((Object e) {
+      // no setting file
       navigatorKey.currentState.pushReplacementNamed('/mastodon_login');
     }, test: (Object e) => e is SettingFileNotFoundError);
   }

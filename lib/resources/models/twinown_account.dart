@@ -27,19 +27,16 @@ class TwinownAccount {
     };
 }
 
-Future<Map<String, TwinownAccount>> loadAccounts() async {
-  Map<String, dynamic> accountData = await loadSetting(SettingType.accounts);
-
-  if (accountData.isEmpty) {
-    throw Error();
-  }
+Future<Map<String, TwinownAccount>> loadAccounts(TwinownSetting twinownSetting) async {
+  Map<String, dynamic> accountData = await twinownSetting.loadSetting(SettingType.accounts);
+  assert(accountData.isNotEmpty);
 
   Map<String, TwinownAccount> accounts = {};
   for (var account in accountData.entries) {
     accounts[account.key] = TwinownAccount(
         account.value['name'],
         ClientType.mastodon,
-        await loadClient(account.value['client']),
+        await loadClient(account.value['client'], twinownSetting),
         account.value['authToken'],
         account.value['sort']
     );
