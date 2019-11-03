@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:twinown_nova/ui/routes/timeline_route.dart';
 
 class DebugButton extends StatelessWidget {
   @override
@@ -8,8 +6,6 @@ class DebugButton extends StatelessWidget {
     return FloatingActionButton(
       onPressed: () async {
         // Debug Action
-        var provider = Provider.of<TimelineProvider>(context, listen: false);
-        provider.startHomeStream();
       },
       tooltip: 'Debug',
       child: Icon(Icons.check),

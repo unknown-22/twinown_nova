@@ -47,9 +47,17 @@ class TwinownAppState extends State<TwinownApp> {
   }
 
   Future<void> _prepare() async {
-    widget.twinownSetting.loadSetting(SettingType.accounts).then((dynamic _) {
-      navigatorKey.currentState.pushReplacementNamed('/timeline_route');
-    }).catchError((Object _) {
+    widget.twinownSetting.loadClientMap().then((clientMap) {
+      return widget.twinownSetting.loadAccountMap(clientMap);
+    }).then((accountMap) {
+      return widget.twinownSetting.loadTabList(accountMap);
+    }).then((tabList) {
+      navigatorKey.currentState.pushReplacementNamed(
+        '/timeline_route',
+        arguments: TimelineRouteArguments(tabList),
+      );
+    }).catchError((Object e) {
+      // no setting file
       navigatorKey.currentState.pushReplacementNamed('/mastodon_login');
     }, test: (Object e) => e is SettingFileNotFoundError);
   }
