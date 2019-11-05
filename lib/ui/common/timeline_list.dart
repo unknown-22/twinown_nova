@@ -34,8 +34,16 @@ class TimelineListState extends State<TimelineList> {
       BuildContext context, TwinownPost item, Animation animation) {
     var provider = Provider.of<TimelineProvider>(context, listen: false);
     return InkWell(
-      onTap: () =>
-          provider.removeItem(widget.tabIndex, item, _buildItem, animation),
+      onTap: () {
+        showDialog<SimpleDialog>(
+            context: context,
+            builder: (BuildContext context) {
+              return SimpleDialog(
+                children: _buildMenu(item, provider),
+                contentPadding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+              );
+            });
+      },
       child: SizeTransition(
         sizeFactor: animation,
         child: Column(
@@ -47,6 +55,77 @@ class TimelineListState extends State<TimelineList> {
           ],
         ),
       ),
+    );
+  }
+
+  List<Widget> _buildMenu(TwinownPost item, TimelineProvider provider) {
+    List<Widget> menus = [
+      Container(
+        width: MediaQuery.of(context).size.width,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: PostWidget(item: item, isDetail: true,),
+        ),
+      ),
+      InkWell(
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: _optionView(item, Icons.reply, '返信する',
+              Icons.keyboard_arrow_right),
+        ),
+      ),
+      Divider(
+        height: 1.0,
+      ),
+      InkWell(
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: _optionView(item, Icons.cached, 'リツイート', null),
+        ),
+      ),
+      Divider(
+        height: 1.0,
+      ),
+      InkWell(
+        onTap: () {
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: _optionView(item, Icons.star, 'お気に入りに追加する', null),
+        ),
+      ),
+      Divider(
+        height: 1.0,
+      ),
+      InkWell(
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: _optionView(item, Icons.person, '${item.accountName}',
+              Icons.keyboard_arrow_right),
+        ),
+      ),
+      Divider(
+        height: 1.0,
+      ),
+    ];
+    return menus;
+  }
+
+  Widget _optionView(
+      TwinownPost item, IconData lIcon, String text, IconData rIcon) {
+    return Row(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Icon(lIcon),
+        ),
+        Text(text),
+        Spacer(),
+        if (rIcon == null) Spacer() else Icon(rIcon)
+      ],
     );
   }
 }

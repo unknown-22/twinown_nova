@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 
 enum TabType {
-  homeAutoRefresh,
+  homeAutoRefresh, homeStream
 }
 
 class TwinownTab {
@@ -13,17 +15,23 @@ class TwinownTab {
 
   dynamic toJson() {
     return {
-      'account': account.name,
+      'account': '${account.name}@${account.client.host}',
       'type': tabType.toString().split('.').last,
-      'options': ''
+      'options': JsonEncoder.withIndent('  ').convert(options),
     };
   }
 
   static TabType stringToType(String tabString) {
-    return TabType.homeAutoRefresh;
+    switch (tabString) {
+      case 'homeAutoRefresh':
+        return TabType.homeAutoRefresh;
+      case 'homeStream':
+        return TabType.homeStream;
+    }
+    throw 'unknown TabType $tabString';
   }
 
-  static Map<String, String> toOptions(Map<String, dynamic> optionsString) {
+  static Map<String, String> stringToOptions(Map<String, dynamic> optionsString) {
     Map<String, String> returnValue = {};
     returnValue['streamDuration'] = '10';
     return returnValue;

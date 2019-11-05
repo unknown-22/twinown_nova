@@ -6,6 +6,8 @@ import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_client.dart';
 import 'package:twinown_nova/resources/models/twinown_post.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:web_socket_channel/io.dart';
 
 class MastodonApi {
   MastodonApi(this.account, this.httpClient);
@@ -42,17 +44,47 @@ class MastodonApi {
     });
   }
 
-  Stream<TwinownPost> getHomeStream({int apiDurationSeconds = 10}) {
-    String recentId = '';
+  Stream<TwinownPost> getHomeStream() {
     var steamController = StreamController<TwinownPost>();
-    Timer.periodic(Duration(seconds: apiDurationSeconds), (_) async {
-      List<TwinownPost> timeline = await getHome(sinceId: recentId);
-      if (timeline.isNotEmpty) {
-        recentId = timeline.first.id.split('_').last;
-        timeline.reversed.toList().forEach(steamController.sink.add);
+
+    var connect = IOWebSocketChannel.connect(
+      'wss://${account.client.host}/api/v1/streaming/?stream=user&access_token=${account.authToken}',
+    );
+    connect.stream.listen((dynamic message) {
+      if (message.length != 0) {
+        dynamic jsonMessage = jsonDecode(message);
+        if (jsonMessage['event'] == 'update') {
+          dynamic data = jsonDecode(jsonMessage['payload']);
+          steamController.sink.add(
+            TwinownPost(
+              "${account.name}@${account.client.host}_${data['id']}",
+              "${data['account']['acct']}",
+              "${data['account']['display_name']}",
+              Uri.parse("${data['account']['avatar']}"),
+              "${data['content']}",
+              DateTime.parse("${data['created_at']}"),
+            )
+          );
+        }
       }
     });
     return steamController.stream;
+  }
+
+  Future<void> post(String message, String host) async {
+    // POST /api/v1/statuses
+    Map<String, String> params = {
+      'status': message
+    };
+    Map<String, String> headers = {
+      'Authorization': 'Bearer ${account.authToken}'
+    };
+    var uri = Uri.https(account.client.host, '/api/v1/statuses', params);
+
+    Response resp = await httpClient.post(uri, headers: headers);
+    if (resp.statusCode != 200) {
+      throw resp.body;
+    }
   }
 
   Future<Map<String, dynamic>> me(String authToken, String host) async {
@@ -91,7 +123,7 @@ class MastodonApi {
     return client;
   }
 
-  static void authorizeMastodon(TwinownClient client) {
+  static Future<void> authorizeMastodon(TwinownClient client) async {
     Map<String, String> params = {
       'response_type': 'code',
       'client_id': client.clientId,
@@ -100,8 +132,19 @@ class MastodonApi {
       'scope': 'write read follow', // push?
     };
     var uri = Uri.https(client.host, '/oauth/authorize', params);
-    Process.run('start', [uri.toString().replaceAll('&', '^&')],
-        runInShell: true);
+    if (Platform.isWindows) {
+      Process.run('start', [uri.toString().replaceAll('&', '^&')],
+          runInShell: true);
+    } else if (Platform.isAndroid) {
+      if (await canLaunch(uri.toString())) {
+        await launch(uri.toString());
+      } else {
+        throw 'Could not Launch ${uri.toString()}';
+      }
+    } else {
+      Error();
+    }
+
   }
 
   static Future<TwinownAccount> tokenMastodon(TwinownClient client, String code,

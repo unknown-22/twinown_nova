@@ -4,7 +4,6 @@ import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
 import 'package:twinown_nova/resources/models/twinown_post.dart';
 import 'package:twinown_nova/resources/models/twinown_tab.dart';
-import 'package:twinown_nova/ui/common/debug_button.dart';
 
 import 'package:provider/provider.dart';
 import 'package:twinown_nova/ui/common/timeline_list.dart';
@@ -16,7 +15,8 @@ class TimelineRouteArguments {
 }
 
 class TimelineProvider with ChangeNotifier {
-  TimelineProvider(this.twinownSetting, this.httpClient, this.tabList) {
+  TimelineProvider(this.twinownSetting, this.httpClient, this.tabList,
+      this.quickPostController) {
     for (var tab in tabList) {
       _dataList.add([]);
       _listKeyList.add(GlobalKey());
@@ -27,6 +27,7 @@ class TimelineProvider with ChangeNotifier {
   final TwinownSetting twinownSetting;
   final Client httpClient;
   final List<TwinownTab> tabList;
+  final TextEditingController quickPostController;
 
   final List<List<TwinownPost>> _dataList = [];
   final List<GlobalKey<AnimatedListState>> _listKeyList = [];
@@ -40,6 +41,12 @@ class TimelineProvider with ChangeNotifier {
     mastodonApiList[tabIndex].getHomeStream().listen((post) async {
       _insertItem(tabIndex, 0, post);
       await Future<void>.delayed(Duration(milliseconds: 300));
+    });
+    mastodonApiList[tabIndex].getHome().then((postList) async {
+      for (var post in postList.reversed) {
+        _insertItem(tabIndex, 0, post);
+        await Future<void>.delayed(Duration(milliseconds: 300));
+      }
     });
   }
 
@@ -58,6 +65,11 @@ class TimelineProvider with ChangeNotifier {
       _listKeyList[tabIndex].currentState.removeItem(removeIndex,
           (context, animation) => buildFunction(context, item, animation));
     }
+  }
+
+  void sendTweet(String message) {
+    mastodonApiList[0].post(message, tabList[0].account.client.host);
+    quickPostController.clear();
   }
 }
 
@@ -84,18 +96,63 @@ class TimelineRouteState extends State<TimelineRoute> {
     List<Widget> pages = List.generate(tabList.length,
         (i) => TimelineList(twinownTab: tabList[i], tabIndex: i));
 
-    provider =
-        TimelineProvider(widget.twinownSetting, widget.httpClient, tabList);
+    TextEditingController quickPostController = TextEditingController();
+
+    provider = TimelineProvider(
+        widget.twinownSetting, widget.httpClient, tabList, quickPostController);
 
     return Scaffold(
         body: MultiProvider(
             providers: [ChangeNotifierProvider(builder: (context) => provider)],
             child: Scaffold(
-              body: PageView(
-                children: pages,
+              body: SafeArea(
+                child: Column(
+                  children: <Widget>[
+                    Expanded(
+                      flex: 1,
+                      child: PageView(
+                        children: pages,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 4.0, left: 4.0, right: 4.0),
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            flex: 1,
+                            child: TextField(
+                              // maxLines: null,
+                              // minLines: 1,
+                              // keyboardType: TextInputType.multiline,
+                              textInputAction: TextInputAction.next,
+                              controller: quickPostController,
+                              onChanged: (_) {},
+                              onSubmitted: (String message) {
+                                provider.sendTweet(message);
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'ついーとする',
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {},
+                            // customBorder:
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Icon(Icons.send),
+                            ),
+                          ),
+                          // RaisedButton.icon(onPressed: () {}, icon: Icon(Icons.send), label: Text('')),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               // body: TimelineList(),
-              floatingActionButton: DebugButton(),
+              // floatingActionButton: DebugButton(),
             )));
   }
 
@@ -108,7 +165,7 @@ class TimelineRouteState extends State<TimelineRoute> {
   void initializeTab() {
     Future<void>.delayed(Duration(milliseconds: 0)).then((_) {
       tabList.asMap().forEach((i, tab) {
-        if (tab.tabType == TabType.homeAutoRefresh) {
+        if (tab.tabType == TabType.homeStream) {
           provider.startHomeStream(i);
         }
       });

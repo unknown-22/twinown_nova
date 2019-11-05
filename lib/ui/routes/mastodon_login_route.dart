@@ -5,6 +5,7 @@ import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
 import 'package:twinown_nova/resources/models/twinown_account.dart';
 import 'package:twinown_nova/resources/models/twinown_client.dart';
+import 'package:twinown_nova/resources/models/twinown_tab.dart';
 
 class MastodonLoginProvider with ChangeNotifier {
   MastodonLoginProvider(this.twinownSetting, this.httpClient);
@@ -35,7 +36,10 @@ class MastodonLoginProvider with ChangeNotifier {
     TwinownAccount account = await MastodonApi.tokenMastodon(
         client, codeText, twinownSetting, httpClient);
     twinownSetting.addAccount(account);
-    Navigator.pushReplacementNamed(context, '/timeline_route');
+    twinownSetting.addTab(TwinownTab(account, TabType.homeStream, {}));
+
+
+    // Navigator.pushReplacementNamed(context, '/timeline_route');
   }
 
   // TODO validate
