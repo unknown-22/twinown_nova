@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' show Client;
 import 'package:twinown_nova/blocs/twinown_setting.dart';
 import 'package:twinown_nova/resources/api/mastodon.dart';
@@ -36,6 +39,7 @@ class TimelineProvider with ChangeNotifier {
   List<List<TwinownPost>> get dataList => _dataList;
 
   List<GlobalKey<AnimatedListState>> get listKeyList => _listKeyList;
+  String tweetText = '';
 
   void startHomeStream(int tabIndex) {
     mastodonApiList[tabIndex].getHomeStream().listen((post) async {
@@ -45,7 +49,6 @@ class TimelineProvider with ChangeNotifier {
     mastodonApiList[tabIndex].getHome().then((postList) async {
       for (var post in postList.reversed) {
         _insertItem(tabIndex, 0, post);
-        await Future<void>.delayed(Duration(milliseconds: 300));
       }
     });
   }
@@ -67,9 +70,13 @@ class TimelineProvider with ChangeNotifier {
     }
   }
 
-  void sendTweet(String message) {
-    mastodonApiList[0].post(message, tabList[0].account.client.host);
-    quickPostController.clear();
+  void sendTweet() {
+    String message = tweetText.replaceAll(RegExp(r'(\r)|(\n)'), '');
+    if (message.isNotEmpty) {
+      mastodonApiList[0].post(message, tabList[0].account.client.host);
+      quickPostController.clear();
+      tweetText = '';
+    }
   }
 }
 
@@ -101,6 +108,8 @@ class TimelineRouteState extends State<TimelineRoute> {
     provider = TimelineProvider(
         widget.twinownSetting, widget.httpClient, tabList, quickPostController);
 
+    FocusNode textFieldFocusNode = FocusNode();
+
     return Scaffold(
         body: MultiProvider(
             providers: [ChangeNotifierProvider(builder: (context) => provider)],
@@ -122,14 +131,17 @@ class TimelineRouteState extends State<TimelineRoute> {
                           Expanded(
                             flex: 1,
                             child: TextField(
-                              // maxLines: null,
-                              // minLines: 1,
-                              // keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                              minLines: 1,
                               textInputAction: TextInputAction.next,
                               controller: quickPostController,
-                              onChanged: (_) {},
+                              focusNode: textFieldFocusNode,
+                              onChanged: (String message) =>
+                                  provider.tweetText = message,
                               onSubmitted: (String message) {
-                                provider.sendTweet(message);
+                                if (!Platform.isWindows) {
+                                  provider.sendTweet();
+                                }
                               },
                               decoration: InputDecoration(
                                 labelText: 'ついーとする',
@@ -137,8 +149,10 @@ class TimelineRouteState extends State<TimelineRoute> {
                             ),
                           ),
                           InkWell(
-                            onTap: () {},
-                            // customBorder:
+                            onTap: () => provider.sendTweet(),
+                            customBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(12.0),
                               child: Icon(Icons.send),

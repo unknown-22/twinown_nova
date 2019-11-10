@@ -40,7 +40,8 @@ class TimelineListState extends State<TimelineList> {
             builder: (BuildContext context) {
               return SimpleDialog(
                 children: _buildMenu(item, provider),
-                contentPadding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                titlePadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.zero,
               );
             });
       },

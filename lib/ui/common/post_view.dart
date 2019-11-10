@@ -30,12 +30,12 @@ class PostWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                '${item.displayName}',
+                '$displayName',
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
               Text(
-                '@${item.accountName}',
+                '@$accountName',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -64,7 +64,7 @@ class PostWidget extends StatelessWidget {
             ),
             Flexible(
               child: Text(
-                '@$accountName}',
+                '@$accountName',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
