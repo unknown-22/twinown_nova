@@ -55,7 +55,8 @@ class TwinownSetting {
         (i) => TwinownTab(
               accounts[tabData[i]['account']],
               TwinownTab.stringToType(tabData[i]['type']),
-              TwinownTab.toOptions(tabData[i]['options']),
+              {}, // TODO
+              // TwinownTab.stringToOptions(tabData[i]['options']),
             ));
   }
 
@@ -77,13 +78,13 @@ class TwinownSetting {
     if (Platform.isWindows) {
       Map<String, String> envVars = Platform.environment;
       settingDirectory = Directory('${envVars['UserProfile']}/.twinown');
-      if (!settingDirectory.existsSync()) {
-        settingDirectory.createSync();
-      }
     } else if (Platform.isAndroid) {
       settingDirectory = await getApplicationDocumentsDirectory();
     } else {
       throw Error();
+    }
+    if (!settingDirectory.existsSync()) {
+      settingDirectory.createSync();
     }
     return settingDirectory;
   }
@@ -123,5 +124,17 @@ class TwinownSetting {
     clients[client.host] = client;
     var data = JsonEncoder.withIndent('  ').convert(clients);
     writeSetting(SettingType.clients, data);
+  }
+
+  Future<void> addTab(TwinownTab tab) async {
+    List<TwinownTab> tabs;
+    try {
+      tabs = await loadSetting(SettingType.tabs);
+    } on SettingFileNotFoundError catch (_) {
+      tabs = <TwinownTab>[];
+    }
+    tabs.add(tab);
+    var data = JsonEncoder.withIndent('  ').convert(tabs);
+    writeSetting(SettingType.tabs, data);
   }
 }

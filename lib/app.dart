@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' show Client;
 import 'package:twinown_nova/ui/routes/mastodon_login_route.dart';
 import 'package:twinown_nova/ui/routes/timeline_route.dart';
@@ -24,6 +25,14 @@ class TwinownAppState extends State<TwinownApp> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'Twinown',
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ja'),
+      ],
       theme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
