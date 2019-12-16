@@ -35,8 +35,11 @@ class TimelineProvider with ChangeNotifier {
   final List<List<TwinownPost>> _dataList = [];
   final List<GlobalKey<AnimatedListState>> _listKeyList = [];
   final List<MastodonApi> mastodonApiList = [];
+  final List<String> _eventMessageList = [];
 
   List<List<TwinownPost>> get dataList => _dataList;
+
+  List<String> get eventMessageList => _eventMessageList;
 
   List<GlobalKey<AnimatedListState>> get listKeyList => _listKeyList;
   String tweetText = '';
@@ -95,6 +98,8 @@ class TimelineRouteState extends State<TimelineRoute> {
   TimelineProvider provider;
   List<TwinownTab> tabList;
 
+  final GlobalKey<ScaffoldState> _key = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     final TimelineRouteArguments args =
@@ -108,66 +113,155 @@ class TimelineRouteState extends State<TimelineRoute> {
     provider = TimelineProvider(
         widget.twinownSetting, widget.httpClient, tabList, quickPostController);
 
-    FocusNode textFieldFocusNode = FocusNode();
-
-    return Scaffold(
-        body: MultiProvider(
-            providers: [ChangeNotifierProvider(builder: (context) => provider)],
-            child: Scaffold(
-              body: SafeArea(
-                child: Column(
-                  children: <Widget>[
-                    Expanded(
-                      flex: 1,
-                      child: PageView(
-                        children: pages,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_key.currentState.isDrawerOpen) {
+          Navigator.of(context).pop();
+          return true;
+        } else {
+          _key.currentState.openDrawer();
+          return false;
+        }
+      },
+      child: Scaffold(
+          key: _key,
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: generateLeftDrawerContents(),
+            ),
+          ),
+          endDrawer: Drawer(
+            child: ListView.separated(
+              itemCount: provider.eventMessageList.length,
+              itemBuilder: (context, index) => ListTile(
+                title: Text(provider.eventMessageList[index]),
+              ),
+              separatorBuilder: (BuildContext context, int index) => Divider(
+                thickness: 1.0,
+              ),
+            ),
+          ),
+          body: MultiProvider(
+              providers: [
+                ChangeNotifierProvider(builder: (context) => provider)
+              ],
+              child: Scaffold(
+                body: SafeArea(
+                  child: Column(
+                    children: <Widget>[
+                      Expanded(
+                        flex: 1,
+                        child: PageView(
+                          children: pages,
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          bottom: 4.0, left: 4.0, right: 4.0),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            flex: 1,
-                            child: TextField(
-                              maxLines: null,
-                              minLines: 1,
-                              textInputAction: TextInputAction.next,
-                              controller: quickPostController,
-                              focusNode: textFieldFocusNode,
-                              onChanged: (String message) =>
-                                  provider.tweetText = message,
-                              onSubmitted: (String message) {
-                                if (!Platform.isWindows) {
-                                  provider.sendTweet();
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'ついーとする',
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: 4.0, left: 4.0, right: 4.0),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              flex: 1,
+                              child: TextField(
+                                maxLines: null,
+                                minLines: 1,
+                                textInputAction: TextInputAction.next,
+                                controller: quickPostController,
+                                onChanged: (String message) =>
+                                    provider.tweetText = message,
+                                onSubmitted: (String message) {
+                                  if (!Platform.isWindows) {
+                                    provider.sendTweet();
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: 'ついーとする',
+                                ),
                               ),
                             ),
-                          ),
-                          InkWell(
-                            onTap: () => provider.sendTweet(),
-                            customBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                            InkWell(
+                              onTap: () => provider.sendTweet(),
+                              customBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10.0)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Icon(Icons.send),
+                              ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Icon(Icons.send),
-                            ),
-                          ),
-                          // RaisedButton.icon(onPressed: () {}, icon: Icon(Icons.send), label: Text('')),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              // body: TimelineList(),
-              // floatingActionButton: DebugButton(),
-            )));
+              ))),
+    );
+  }
+
+  List<Widget> generateLeftDrawerContents() {
+    var accountList = List.generate(1, (index) {
+      return DropdownMenuItem<String>(
+        value: tabList[index].account.name,
+        child: Text(tabList[index].account.name),
+      );
+    });
+
+    var leftDrawerContents = <Widget>[
+          DrawerHeader(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
+                  child: FlutterLogo(),
+                ),
+                Spacer(),
+                ListTile(
+                  title: Text('あんのーん'),
+                  subtitle: Text('unknown_Ex@unkworks.net'),
+                ),
+                DropdownButton<String>(
+                  value: accountList[0].value,
+                  isExpanded: true,
+                  items: accountList,
+                  onChanged: (_) {},
+                ),
+              ],
+            ),
+            decoration: BoxDecoration(color: Colors.pinkAccent),
+          ),
+          ListTile(
+            leading: Icon(Icons.message),
+            title: Text('ツイート'),
+          ),
+          ListTile(
+            leading: Icon(Icons.create),
+            title: Text('クイック投稿'),
+          ),
+          Divider(
+            thickness: 1.0,
+          ),
+        ] +
+        List.generate(tabList.length, (index) {
+          return ListTile(
+            title: Text(tabList[index].account.name),
+          );
+        }) +
+        [
+          Divider(
+            thickness: 1.0,
+          ),
+          ListTile(
+            leading: Icon(Icons.settings),
+            title: Text('Setting'),
+          ),
+        ];
+    return leftDrawerContents;
   }
 
   @override

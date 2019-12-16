@@ -93,8 +93,6 @@ class PostWidget extends StatelessWidget {
               height: 48.0,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(4.0),
-                // child: CachedNetworkImage(imageUrl: item.iconUri.toString(),),
-                // child: Image(image: CachedNetworkImageProvider(item.iconUri.toString())),
                 child: _iconWidget(
                   item.iconUri.toString(),
                 ),
