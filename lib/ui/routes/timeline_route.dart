@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -22,7 +23,9 @@ class TimelineProvider with ChangeNotifier {
       this.quickPostController) {
     for (var tab in tabList) {
       _dataList.add([]);
+      _dataQueueList.add([]);
       _listKeyList.add(GlobalKey());
+      _scrollControllerList.add(null);
       mastodonApiList.add(MastodonApi(tab.account, httpClient));
     }
   }
@@ -32,6 +35,7 @@ class TimelineProvider with ChangeNotifier {
   final List<TwinownTab> tabList;
   final TextEditingController quickPostController;
 
+  final List<List<TwinownPost>> _dataQueueList = [];
   final List<List<TwinownPost>> _dataList = [];
   final List<GlobalKey<AnimatedListState>> _listKeyList = [];
   final List<MastodonApi> mastodonApiList = [];
@@ -44,6 +48,11 @@ class TimelineProvider with ChangeNotifier {
   List<GlobalKey<AnimatedListState>> get listKeyList => _listKeyList;
   String tweetText = '';
 
+  final List<ScrollController> _scrollControllerList = [];
+  List<ScrollController> get scrollControllerList => _scrollControllerList;
+
+  int currentIndex = 0;
+
   void startHomeStream(int tabIndex) {
     mastodonApiList[tabIndex].getHomeStream().listen((post) async {
       _insertItem(tabIndex, 0, post);
@@ -51,15 +60,33 @@ class TimelineProvider with ChangeNotifier {
     });
     mastodonApiList[tabIndex].getHome().then((postList) async {
       for (var post in postList.reversed) {
-        _insertItem(tabIndex, 0, post);
+        // _insertItem(tabIndex, 0, post);
+        _dataList[tabIndex].insert(0, post);
+        if (_listKeyList[tabIndex].currentState != null) {
+          _listKeyList[tabIndex].currentState.insertItem(0);
+        }
       }
     });
+
+    Timer.periodic(
+      Duration(milliseconds: 300), (_) async {
+        if (_scrollControllerList[currentIndex].offset == 0 && _dataQueueList[currentIndex].isNotEmpty) {
+          _dataList[tabIndex].insert(0, _dataQueueList[currentIndex].last);
+          if (_listKeyList[tabIndex].currentState != null) {
+            _listKeyList[tabIndex].currentState.insertItem(0);
+          }
+
+          _dataQueueList[currentIndex].removeLast();
+          await Future<void>.delayed(Duration(milliseconds: 300));
+        }
+      },
+    );
   }
 
   void _insertItem(int tabIndex, int index, TwinownPost item) {
-    _dataList[tabIndex].insert(index, item);
-    if (_listKeyList[tabIndex].currentState != null) {
-      _listKeyList[tabIndex].currentState.insertItem(index);
+    // if (_scrollControllerList[currentIndex].offset == 0 && index == 0) {
+    if (index == 0) {
+        _dataQueueList[tabIndex].insert(index, item);
     }
   }
 
@@ -154,6 +181,7 @@ class TimelineRouteState extends State<TimelineRoute> {
                         flex: 1,
                         child: PageView(
                           children: pages,
+                          onPageChanged: (index) => provider.currentIndex = index,
                         ),
                       ),
                       Padding(

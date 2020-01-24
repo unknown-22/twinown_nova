@@ -21,12 +21,15 @@ class TimelineListState extends State<TimelineList> {
   Widget build(BuildContext context) {
     var provider = Provider.of<TimelineProvider>(context, listen: false);
     List<TwinownPost> posts = provider.dataList[widget.tabIndex];
+    ScrollController _listScrollController = ScrollController();
+    provider.scrollControllerList[widget.tabIndex] = _listScrollController;
 
     return AnimatedList(
       key: provider.listKeyList[widget.tabIndex],
       initialItemCount: posts.length,
       itemBuilder: (context, index, animation) =>
           _buildItem(context, posts[index], animation),
+      controller: _listScrollController,
     );
   }
 
